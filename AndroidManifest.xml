@@ -15,9 +15,9 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@android:style/Theme.Light.NoTitleBar"  >
         <activity
-            android:name=".MainActivity"
+            android:name="com.xwh.whatsapi.SplashActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +25,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+        <activity android:name="com.xwh.whatsapi.MainActivity"></activity>
+        <activity android:name="com.xwh.whatsapi.GuideActivity"></activity>
         <activity android:name="com.xwh.whatsapi.HellowordsActivity"></activity>
         <activity android:name="com.xwh.whatsapi.ZhaiyanActivity"></activity>
     </application>

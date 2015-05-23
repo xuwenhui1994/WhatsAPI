@@ -1,7 +1,6 @@
 package com.xwh.whatsapi;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,6 +17,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -30,13 +31,16 @@ import android.widget.Toast;
 
 public class HellowordsActivity extends Activity {
 
-	ImageView img_show;
-
-	Bitmap mBitmap = null;
-
-	Timer mTimer;
-
-	ProgressDialog mProgressDialog = null;
+	// 图片展示控件
+	private ImageView img_show;
+	// 调用API从网络上获取的位图
+	private Bitmap mBitmap = null;
+	// 计时器
+	private Timer mTimer = null;
+	// 进度条对话框
+	private ProgressDialog mProgressDialog = null;
+	// 消息通信
+	private Handler handler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +50,7 @@ public class HellowordsActivity extends Activity {
 
 		img_show = (ImageView) findViewById(R.id.img_show);
 
+		// 初始化进度条对话框
 		if (mProgressDialog == null) {
 			mProgressDialog = new ProgressDialog(HellowordsActivity.this);
 			mProgressDialog.setTitle("请等待");
@@ -54,10 +59,14 @@ public class HellowordsActivity extends Activity {
 			mProgressDialog.show();
 		}
 
-		final Handler handler = new Handler() {
-			public void handleMessage(android.os.Message msg) {
+		// 处理子线程的消息
+		handler = new Handler() {
+			public void handleMessage(Message msg) {
 				if (msg.what == 0x123) {
 					if (mBitmap == null) {
+						if (mProgressDialog != null) {
+							mProgressDialog.dismiss();
+						}
 						Toast.makeText(HellowordsActivity.this, "网络连接异常",
 								Toast.LENGTH_SHORT).show();
 					} else {
@@ -69,23 +78,24 @@ public class HellowordsActivity extends Activity {
 				}
 			};
 		};
+	}
 
+	// 活动启动时
+	@Override
+	protected void onStart() {
+		// 初始化计时器
 		mTimer = new Timer();
-
 		mTimer.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
 				String uri = "http://hello.api.235dns.com/api.php?code=png&key=79c0afa47f80011c1e8a07b6a09efb5d";
-
-				HttpGet get = new HttpGet(uri);
 				HttpClient client = new DefaultHttpClient();
+				HttpGet get = new HttpGet(uri);
 
 				try {
 					HttpResponse response = client.execute(get);
 					HttpEntity entity = response.getEntity();
-					InputStream is = entity.getContent();
-					mBitmap = BitmapFactory.decodeStream(is);
+					mBitmap = BitmapFactory.decodeStream(entity.getContent());
 				} catch (ClientProtocolException e) {
 					e.printStackTrace();
 				} catch (IllegalStateException e) {
@@ -96,11 +106,14 @@ public class HellowordsActivity extends Activity {
 				handler.sendEmptyMessage(0x123);
 			}
 		}, 0, 5000);
+		super.onStart();
 	}
 
+	// 活动停止时
 	@Override
-	protected void onDestroy() {
+	protected void onStop() {
 		mTimer.cancel();
-		super.onDestroy();
+		super.onStop();
 	}
+
 }

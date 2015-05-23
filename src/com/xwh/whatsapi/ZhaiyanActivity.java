@@ -32,13 +32,16 @@ import android.widget.Toast;
 
 public class ZhaiyanActivity extends Activity {
 
-	TextView txt_show;
-
-	String result = "";
-
-	Timer mTimer;
-
-	ProgressDialog mProgressDialog = null;
+	// 文字显示控件
+	private TextView txt_show;
+	// 调用API从网络上获取的文字
+	private String result = "";
+	// 计时器
+	private Timer mTimer = null;
+	// 进度条对话框
+	private ProgressDialog mProgressDialog = null;
+	// 消息通信
+	private Handler handler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,15 +59,21 @@ public class ZhaiyanActivity extends Activity {
 			mProgressDialog.show();
 		}
 
-		final Handler handler = new Handler() {
+		handler = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
 				super.handleMessage(msg);
 				if (msg.what == 0x123) {
 					if (result.equals("")) {
+						if (mProgressDialog != null) {
+							mProgressDialog.dismiss();
+						}
 						Toast.makeText(ZhaiyanActivity.this, "网络连接异常",
 								Toast.LENGTH_SHORT).show();
 					} else {
+						if (mProgressDialog != null) {
+							mProgressDialog.dismiss();
+						}
 						String text = "";
 						try {
 							JSONObject jsonObject = new JSONObject(result);
@@ -72,29 +81,28 @@ public class ZhaiyanActivity extends Activity {
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
-						if (mProgressDialog != null) {
-							mProgressDialog.dismiss();
-						}
 						txt_show.setText(text);
 					}
 				}
 			}
 		};
+	}
 
+	// 活动启动时
+	@Override
+	protected void onStart() {
 		mTimer = new Timer();
-
 		mTimer.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
-				String uri = "http://zyfree.acman.cn/";
+				String uri = "http://zyfree1.acman.cn/";
 				HttpClient client = new DefaultHttpClient();
 				HttpGet get = new HttpGet(uri);
 
 				try {
 					HttpResponse response = client.execute(get);
 					HttpEntity entity = response.getEntity();
-					result = EntityUtils.toString(response.getEntity());
+					result = EntityUtils.toString(entity);
 				} catch (ClientProtocolException e) {
 					e.printStackTrace();
 				} catch (ParseException e) {
@@ -105,10 +113,12 @@ public class ZhaiyanActivity extends Activity {
 				handler.sendEmptyMessage(0x123);
 			}
 		}, 0, 5000);
+		super.onStart();
 	}
 
+	// 活动停止时
 	@Override
-	protected void onDestroy() {
+	protected void onStop() {
 		mTimer.cancel();
 		super.onDestroy();
 	}
